@@ -7,6 +7,18 @@ import (
 	"os"
 )
 
+type RSS struct {
+	Channel Channel `xml:"channel"`
+}
+type Channel struct {
+	Title string `xml:"title"`
+	Items []Item `xml:"item"`
+}
+type Item struct {
+	Title string `xml:"title"`
+	Link  string `xml:"link"`
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
