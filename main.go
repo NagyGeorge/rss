@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -41,24 +42,16 @@ func fetchFeed(rssURL string) []byte {
 	return body
 }
 
-/*
-func writeFeed(stringFeed string) {
-	file, err := os.Create("/tmp/dat1")
-	check(err)
+func parseFeed(XMLContent []byte) {
+	var ourFeed RSS
+	xml.Unmarshal(XMLContent, &ourFeed)
 
-	defer file.Close()
-
-	n3, err := file.WriteString(stringFeed)
-	check(err)
-	fmt.Printf("wrote %d bytes\n", n3)
-
-	file.Sync()
+	for _, v := range ourFeed.Channel.Items {
+		fmt.Println("------------------")
+		fmt.Printf("%s\n\n", v.Title)
+		fmt.Printf("%s\n", v.Link)
+	}
 }
-
-
-func parseFeed(xmlContent string) {
-}
-*/
 
 func main() {
 	if len(os.Args) < 2 {
@@ -69,5 +62,5 @@ func main() {
 	rssFeed := os.Args[1]
 	fmt.Printf("Looking up activity for: %s\n\n", rssFeed)
 
-	fmt.Printf("%s", fetchFeed(rssFeed))
+	parseFeed(fetchFeed(rssFeed))
 }
