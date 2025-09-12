@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type RSS struct {
@@ -16,8 +17,10 @@ type Channel struct {
 	Items []Item `xml:"item"`
 }
 type Item struct {
-	Title string `xml:"title"`
-	Link  string `xml:"link"`
+	Title    string `xml:"title"`
+	Link     string `xml:"link"`
+	Comments string `xml:"comments"`
+	PubDate  string `xml:"pubDate"`
 }
 
 func check(e error) {
@@ -52,6 +55,10 @@ func parseFeed(xmlContent []byte) {
 		fmt.Println("------------------")
 		fmt.Printf("%s\n\n", v.Title)
 		fmt.Printf("%s\n", v.Link)
+		parsedTime, err := time.Parse(time.RFC1123Z, v.PubDate)
+		check(err)
+		formattedTime := parsedTime.Format(time.DateTime)
+		fmt.Printf("%s\n", formattedTime)
 	}
 }
 
