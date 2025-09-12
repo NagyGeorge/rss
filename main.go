@@ -46,6 +46,8 @@ func parseFeed(XMLContent []byte) {
 	var ourFeed RSS
 	xml.Unmarshal(XMLContent, &ourFeed)
 
+	fmt.Printf("%s\n\n", ourFeed.Channel.Title)
+
 	for _, v := range ourFeed.Channel.Items {
 		fmt.Println("------------------")
 		fmt.Printf("%s\n\n", v.Title)
