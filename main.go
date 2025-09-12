@@ -73,14 +73,6 @@ func timeChecker(ourTime string) time.Time {
 		time.RFC3339Nano,
 		time.RFC3339,
 		time.RFC850,
-		time.ANSIC,
-		time.UnixDate,
-		time.RubyDate,
-		time.StampMilli,
-		time.StampMicro,
-		time.StampNano,
-		time.DateTime,
-		time.DateOnly,
 	}
 	var goodTime time.Time
 	for _, v := range formats {
