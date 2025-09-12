@@ -42,9 +42,9 @@ func fetchFeed(rssURL string) []byte {
 	return body
 }
 
-func parseFeed(XMLContent []byte) {
+func parseFeed(xmlContent []byte) {
 	var ourFeed RSS
-	xml.Unmarshal(XMLContent, &ourFeed)
+	xml.Unmarshal(xmlContent, &ourFeed)
 
 	fmt.Printf("%s\n\n", ourFeed.Channel.Title)
 
