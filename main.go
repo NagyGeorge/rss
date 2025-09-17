@@ -23,32 +23,32 @@ type Item struct {
 	PubDate  string `xml:"pubDate"`
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
-func fetchFeed(rssURL string) []byte {
+func fetchFeed(rssURL string) ([]byte, error) {
 	res, err := http.Get(rssURL)
-	check(err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch RSS feed: %w", err)
+	}
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		fmt.Printf("Response failed with status code: %d\n", res.StatusCode)
-		os.Exit(1)
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return nil, fmt.Errorf("response failed with status code: %d", res.StatusCode)
 	}
 
 	body, err := io.ReadAll(res.Body)
-	check(err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
 
-	return body
+	return body, nil
 }
 
 func parseFeed(xmlContent []byte) error {
 	var ourFeed RSS
 	err := xml.Unmarshal(xmlContent, &ourFeed)
-	check(err)
+	if err != nil {
+		return fmt.Errorf("failed to parse XML: %w", err)
+	}
 
 	fmt.Printf("%s\n\n", ourFeed.Channel.Title)
 
@@ -57,14 +57,18 @@ func parseFeed(xmlContent []byte) error {
 		fmt.Printf("%s\n\n", v.Title)
 		fmt.Printf("%s\n", v.Link)
 
-		parsedTime := timeChecker(v.PubDate)
-		formattedTime := parsedTime.Format(time.DateTime)
-		fmt.Printf("%s\n", formattedTime)
+		parsedTime, err := timeChecker(v.PubDate)
+		if err != nil {
+			fmt.Printf("Could not parse date: %s\n", v.PubDate)
+		} else {
+			formattedTime := parsedTime.Format(time.DateTime)
+			fmt.Printf("%s\n", formattedTime)
+		}
 	}
 	return nil
 }
 
-func timeChecker(ourTime string) time.Time {
+func timeChecker(ourTime string) (time.Time, error) {
 	formats := []string{
 		time.RFC1123Z,
 		time.RFC1123,
@@ -74,13 +78,12 @@ func timeChecker(ourTime string) time.Time {
 		time.RFC3339,
 		time.RFC850,
 	}
-	var goodTime time.Time
-	for _, v := range formats {
-		if t, err := time.Parse(v, ourTime); err == nil {
-			goodTime = t
+	for _, format := range formats {
+		if t, err := time.Parse(format, ourTime); err == nil {
+			return t, nil
 		}
 	}
-	return goodTime
+	return time.Time{}, fmt.Errorf("unable to parse time: %s", ourTime)
 }
 
 func main() {
@@ -92,5 +95,14 @@ func main() {
 	rssFeed := os.Args[1]
 	fmt.Printf("Looking up activity for: %s\n\n", rssFeed)
 
-	parseFeed(fetchFeed(rssFeed))
+	xmlContent, err := fetchFeed(rssFeed)
+	if err != nil {
+		fmt.Printf("Error fetching feed: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := parseFeed(xmlContent); err != nil {
+		fmt.Printf("Error parsing feed: %v\n", err)
+		os.Exit(1)
+	}
 }
